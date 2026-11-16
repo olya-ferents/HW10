@@ -1,0 +1,118 @@
+# Список мутантів L11 (крок 2 лабораторної).
+#
+# 1. Скопіюйте цей файл у mutants.toml.
+# 2. Впишіть 12 мутантів, по три на кожен клас:
+#      значення тіру · межа EUR 1 000 · арифметика · форма результату
+#    Поле class пишіть саме так, дослівно: "значення тіру", "межа EUR 1 000",
+#    "арифметика", "форма результату" — скрипт групує мутантів за цим рядком.
+# 3. Закомітьте mutants.toml ДО першого прогону:
+#      git add mutants.toml && git commit -m "L11: список мутантів"
+#    (Windows PowerShell: git add mutants.toml; git commit -m "L11: список мутантів")
+#    Після цього список не змінюється.
+#
+# Кожен мутант — одна маленька зміна в коді:
+#   id       — A-01…A-03, B-01…B-03, C-01…C-03, D-01…D-03
+#   class    — назва класу
+#   file     — файл, у якому міняємо (app/engines/fx.py або app/engines/policy.py)
+#   find     — рядок коду дослівно, як у файлі (з пробілами); має зустрічатися рівно 1 раз
+#   replace  — на що міняємо
+#   description — що зламано, людською мовою
+#
+# Якщо в рядку є лапки, беріть інші лапки навколо: find = '"tier2": 0.9'
+# Перевірка, що список застосовується: python tools/run_mutants.py --check
+
+[[mutant]]
+id = "A-01"
+class = "значення тіру"
+file = "app/engines/policy.py"
+find = '"tier2": 0.9'
+replace = '"tier2": 1.5'
+description = "клієнт tier2 платить 1.5 % замість 0.9 % (наслідок як у дефекту D20)"
+
+[[mutant]]
+id = "A-02"
+class = "значення тіру"
+file = "app/engines/policy.py"
+find = '"tier1": 1.5'
+replace = '"tier1": 0.9'
+description = "клієнт tier1 платить спред 0.9 % замість 1.5 %"
+
+[[mutant]]
+id = "A-03"
+class = "значення тіру"
+file = "app/engines/policy.py"
+find = '"tier3": 0.5'
+replace = '"tier3": 0.9'
+description = "клієнт tier3 платить спред 0.9 % замість 0.5 %"
+
+[[mutant]]
+id = "B-01"
+class = "межа EUR 1 000"
+file = "app/engines/fx.py"
+find = 'within = allowance_used_eur + amount_eur <= allowance_total'
+replace = 'within = allowance_used_eur + amount_eur < allowance_total'
+description = "рівно на безкоштовному ліміті вже стягується спред"
+
+[[mutant]]
+id = "B-02"
+class = "межа EUR 1 000"
+file = "app/engines/policy.py"
+find = '"tier2": 1000'
+replace = '"tier2": 999'
+description = "безкоштовний ліміт tier2 зменшено з EUR 1 000 до EUR 999"
+
+[[mutant]]
+id = "B-03"
+class = "межа EUR 1 000"
+file = "app/engines/policy.py"
+find = '"tier2": 1000'
+replace = '"tier2": 1001'
+description = "безкоштовний ліміт tier2 збільшено з EUR 1 000 до EUR 1 001"
+
+[[mutant]]
+id = "C-01"
+class = "арифметика"
+file = "app/engines/fx.py"
+find = 'return policy.RATES_TO_EUR[from_currency] / policy.RATES_TO_EUR[to_currency]'
+replace = 'return policy.RATES_TO_EUR[from_currency] * policy.RATES_TO_EUR[to_currency]'
+description = "крос-курс обчислюється множенням замість ділення"
+
+[[mutant]]
+id = "C-02"
+class = "арифметика"
+file = "app/engines/fx.py"
+find = 'gross = amount * rate'
+replace = 'gross = amount / rate'
+description = "сума до спреду ділиться на курс замість множення"
+
+[[mutant]]
+id = "C-03"
+class = "арифметика"
+file = "app/engines/fx.py"
+find = 'spread_amount = gross * spread_pct / 100.0'
+replace = 'spread_amount = gross * spread_pct / 10.0'
+description = "сума спреду завищена вдесятеро через ділення на 10 замість 100"
+
+[[mutant]]
+id = "D-01"
+class = "форма результату"
+file = "app/engines/fx.py"
+find = 'round(v, 6) if isinstance(v, float) else v'
+replace = 'str(round(v, 6)) if isinstance(v, float) else v'
+description = "as_dict повертає дробові числа рядками замість чисел"
+
+[[mutant]]
+id = "D-02"
+class = "форма результату"
+file = "app/engines/fx.py"
+find = 'allowance_applied=within,'
+replace = 'allowance_applied=not within,'
+description = "ознака застосування безкоштовного ліміту має протилежне значення"
+
+[[mutant]]
+id = "D-03"
+class = "форма результату"
+file = "app/engines/fx.py"
+find = 'final_amount=gross - spread_amount)'
+replace = 'final_amount=spread_amount)'
+description = "поле кінцевої суми містить суму спреду замість результату конвертації"
